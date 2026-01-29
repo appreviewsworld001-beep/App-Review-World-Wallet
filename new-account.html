@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Create New Account</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+    margin:0;
+    font-family: Arial, sans-serif;
+    background: radial-gradient(circle at top, #0f172a, #020617);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    color:white;
+}
+
+/* SIGNUP CARD */
+.signup-box{
+    width:90%;
+    max-width:300px;
+    background: rgba(30,41,59,0.85);
+    padding:18px;
+    border-radius:16px;
+    box-shadow: 
+0 0 25px rgba(59,130,246,1),
+0 0 50px rgba(59,130,246,0.6);
+    backdrop-filter: blur(8px);
+    text-align:center;
+}
+
+/* LOGO */
+.logo img{
+    width:75px;
+    height:75px;
+    border-radius:50%;
+    box-shadow: 
+0 0 25px rgba(59,130,246,1),
+0 0 50px rgba(59,130,246,0.6);
+    margin-bottom:12px;
+}
+
+/* TITLE */
+.title{
+    font-size:26px;
+    font-weight:700;
+    margin-bottom:4px;
+}
+
+.subtitle{
+    font-size:13px;
+    letter-spacing:1px;
+    color:#93c5fd;
+    margin-bottom:18px;
+}
+
+/* INPUT */
+input{
+    width:93%;
+    height:34px;
+    padding:6px 10px;
+    margin-top:8px;
+    border:none;
+    border-radius:8px;
+    background:#334155;
+    color:white;
+    font-size:14px;
+}
+
+input::placeholder{
+    color:#cbd5e1;
+}
+
+input:focus{
+    outline:none;
+    box-shadow:0 0 8px rgba(59,130,246,0.7);
+}
+
+/* BUTTON */
+button{
+    width:100%;
+    padding:12px;
+    margin-top:18px;
+    background: linear-gradient(135deg,#2563eb,#38bdf8);
+    border:none;
+    border-radius:10px;
+    font-size:16px;
+    font-weight:600;
+    color:white;
+    cursor:pointer;
+}
+
+button:hover{
+    opacity:0.9;
+}
+
+/* LINK */
+.link{
+    margin-top:14px;
+    font-size:14px;
+    color:#93c5fd;
+    cursor:pointer;
+}
+
+.link:hover{
+    text-decoration:underline;
+}
+/* Mobile Responsive */
+@media (max-width:480px){
+    .signup-box{
+        max-width:300px;
+        padding:18px;
+    }
+
+    .title{
+        font-size:22px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="signup-box">
+
+    <div class="logo">
+        <img src="logo.png">
+        <div class="title">Create Account</div>
+        <div class="subtitle">App Reviews World</div>
+    </div>
+
+    <input id="name" placeholder="Full Name">
+    <input id="mobile" type="tel"  placeholder="Mobile Number">
+    <input id="email" type="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+
+    <button onclick="signup()">Create Account</button>
+
+    <div class="msg" id="msg"></div>
+
+    <div class="link" onclick="window.location.href='index.html'">
+        ← Back to Login
+    </div>
+
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+/* 🔥 Firebase Config — same as login page */
+const firebaseConfig = {
+    apiKey: "AIzaSyDkCsI-cOUGQ0RtcMue_-7oRX1oTdJhFBs",
+    authDomain: "app-review-world-wallet.firebaseapp.com",
+    projectId: "app-review-world-wallet",
+    storageBucket: "app-review-world-wallet.firebasestorage.app",
+    messagingSenderId: "30544424851",
+    appId: "1:30544424851:web:da491e3c816a145a2b8266",
+    measurementId: "G-GPWDM1L7BT"
+  };
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+async function signup(){
+  const name = document.getElementById("name").value.trim();
+  const mobile = document.getElementById("mobile").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const pass = document.getElementById("password").value.trim();
+  const msg = document.getElementById("msg");
+
+  if(!name || !mobile || !email || !pass){
+    msg.innerHTML = "❌ Please fill all fields";
+    return;
+  }
+
+  try {
+    const res = await auth.createUserWithEmailAndPassword(email, pass);
+    const user = res.user;
+
+    // ✅ SAVE DATA TO FIRESTORE (mobile added)
+    await db.collection("users").doc(user.uid).set({
+      name: name,
+      mobile: mobile,
+      email: email,
+      balance: 0,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    msg.innerHTML = "✅ Account Created Successfully";
+      setTimeout(() => {
+        window.location.href="./dashboard.html";
+      },1500);
+
+  } catch(error){
+    msg.innerHTML = "❌ " + error.message;
+  }
+}
+</script>
+
+</body>
+</html>

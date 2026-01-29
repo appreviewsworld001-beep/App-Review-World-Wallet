@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin Control Panel</title>
+
+<style>
+body{
+  background:#0f172a;
+  color:white;
+  font-family:Arial;
+  padding:20px;
+}
+
+h2{
+  text-align:center;
+  margin-bottom:20px;
+}
+
+.tabs{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  justify-content:center;
+  margin-bottom:20px;
+}
+
+.tab-btn{
+  padding:10px 15px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  background:#1e293b;
+  color:white;
+  font-weight:bold;
+}
+
+.tab-btn.active{
+  background:#2563eb;
+}
+
+.section{
+  display:none;
+}
+
+.section.active{
+  display:block;
+}
+
+.card{
+  background:#1e293b;
+  padding:15px;
+  border-radius:10px;
+  margin-bottom:12px;
+}
+
+input,textarea{
+  width:100%;
+  padding:8px;
+  border-radius:5px;
+  border:none;
+  margin-top:5px;
+}
+
+button{
+  padding:8px 15px;
+  border:none;
+  border-radius:5px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.success{ background:#22c55e; }
+.blue{ background:#3b82f6; }
+.orange{ background:#f59e0b; }
+.red{ background:#ef4444; }
+
+</style>
+</head>
+
+<body>
+
+<h2>🧑‍💼 Admin Control Panel</h2>
+
+<!-- Buttons -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="openTab('withdraw')">Withdraw</button>
+  <button class="tab-btn" onclick="openTab('gift')">Gift Cards</button>
+  <button class="tab-btn" onclick="openTab('support')">Support</button>
+  <button class="tab-btn" onclick="openTab('payment')">Send Payment</button>
+  <button class="tab-btn" onclick="openTab('users')">Users</button>
+</div>
+
+<!-- Withdraw -->
+<div id="withdraw" class="section active">
+  <h3>💰Withdraw Requests</h3>
+  <div id="withdrawList"></div>
+</div>
+
+
+<!-- Gift Card -->
+<div id="gift" class="section">
+  <h3>Gift Card Requests</h3>
+  <p>Coming Soon...</p>
+</div>
+
+<!-- Support -->
+<div id="support" class="section">
+  <h3>Support Messages</h3>
+  <p>Coming Soon...</p>
+</div>
+
+<!-- Payment -->
+<div id="payment" class="section">
+  <h3>Send Payment</h3>
+
+  <div class="card">
+    <input id="payUser" placeholder="User Mobile / Email">
+    <input id="payAmount" type="number" placeholder="Amount">
+    <button class="blue" onclick="sendPayment()">Send Money</button>
+  </div>
+</div>
+
+<!-- Users -->
+<div id="users" class="section">
+  <h3>User Information</h3>
+  <p>Coming Soon...</p>
+</div>
+
+<script>
+function openTab(tab){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  
+  document.getElementById(tab).classList.add('active');
+  event.target.classList.add('active');
+}
+
+/* Withdraw loader */
+function loadWithdraw(){
+  let data = JSON.parse(localStorage.getItem("withdrawRequests")) || [];
+  let html = "";
+
+  if(data.length === 0){
+     html = "<p>No requests found.</p>";
+  }
+
+  data.forEach((req,i)=>{
+    html += 
+      <div class="card">
+        <p>₹${req.amount}</p>
+        <p>UPI: ${req.upi}</p>
+        <p>Status: ${req.status}</p>
+        ${
+          req.status === "Pending"
+          ? <button class="success" onclick="markSuccess(${i})">Mark Success</button>
+          : "✔ Completed"
+        }
+      </div>
+    ;
+  });
+
+  document.getElementById("withdrawList").innerHTML = html;
+}
+
+function markSuccess(index){
+  let data = JSON.parse(localStorage.getItem("withdrawRequests"));
+  data[index].status = "Success";
+  localStorage.setItem("withdrawRequests", JSON.stringify(data));
+  loadWithdraw();
+  alert("Payment Completed!");
+}
+
+/* Send payment */
+function sendPayment(){
+  alert("Payment sent (demo)");
+}
+
+loadWithdraw();
+const withdrawList = document.getElementById("withdrawList");
+
+// Load Withdraw Requests
+db.collection("withdrawRequests")
+  .orderBy("time", "desc")
+  .onSnapshot(snapshot => {
+    withdrawList.innerHTML = "";
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+
+      withdrawList.innerHTML += 
+        <div style="padding:10px;margin:10px;border:1px solid #ccc;border-radius:8px;">
+          <p><b>User:</b> ${data.email}</p>
+          <p><b>Amount:</b> ₹${data.amount}</p>
+          <p><b>UPI:</b> ${data.upi}</p>
+          <p><b>Status:</b> ${data.status}</p>
+
+          ${
+            data.status === "pending"
+              ? <button onclick="approveWithdraw('${doc.id}')">✅ Mark Paid</button>
+              : <span style="color:green;">✔ Completed</span>
+          }
+        </div>
+      ;
+    });
+  });
+
+// Approve Function
+function approveWithdraw(id) {
+  db.collection("withdrawRequests").doc(id).update({
+    status: "paid",
+    paidAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  alert("Payment marked as SUCCESS ✅");
+}
+</script>
+
+</body>
+</html>
